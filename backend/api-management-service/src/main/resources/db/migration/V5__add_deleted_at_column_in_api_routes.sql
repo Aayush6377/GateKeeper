@@ -1,0 +1,2 @@
+ALTER TABLE api_routes
+ADD COLUMN deleted_at TIMESTAMP WITH TIME ZONE;
