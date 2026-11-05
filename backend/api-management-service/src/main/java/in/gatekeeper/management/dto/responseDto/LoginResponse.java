@@ -6,6 +6,7 @@ import java.util.UUID;
 
 @Builder
 public record LoginResponse(
-        String token,
+        String accessToken,
+        String refreshToken,
         long expiresInSeconds
 ) { }

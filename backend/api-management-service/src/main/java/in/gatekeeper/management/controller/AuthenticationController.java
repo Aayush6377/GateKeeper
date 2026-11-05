@@ -1,6 +1,7 @@
 package in.gatekeeper.management.controller;
 
 import in.gatekeeper.management.dto.requestDto.LoginRequest;
+import in.gatekeeper.management.dto.requestDto.RefreshTokenRequest;
 import in.gatekeeper.management.dto.responseDto.LoginResponse;
 import in.gatekeeper.management.service.AuthenticationService;
 import jakarta.validation.Valid;
@@ -20,5 +21,16 @@ public class AuthenticationController {
     @PostMapping("/login")
     public ResponseEntity<LoginResponse> login(@Valid @RequestBody LoginRequest request){
         return ResponseEntity.ok(authenticationService.login(request));
+    }
+
+    @PostMapping("/refresh")
+    public ResponseEntity<LoginResponse> refresh(@Valid @RequestBody RefreshTokenRequest request) {
+        return ResponseEntity.ok(authenticationService.refreshToken(request));
+    }
+
+    @PostMapping("/logout")
+    public ResponseEntity<Void> logout(@Valid @RequestBody RefreshTokenRequest request) {
+        authenticationService.logout(request);
+        return ResponseEntity.ok().build();
     }
 }
