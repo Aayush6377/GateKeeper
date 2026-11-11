@@ -1,7 +1,7 @@
 import axios from 'axios';
 
 export const apiClient = axios.create({
-  baseURL: import.meta.env.VITE_API_BASE_URL || '/api/v1',
+  baseURL: `${import.meta.env.VITE_API_BASE_URL}/api/v1`,
 });
 
 apiClient.interceptors.request.use((config) => {
@@ -47,7 +47,7 @@ apiClient.interceptors.response.use(
 
       try {
         const refreshToken = localStorage.getItem('gatekeeper_refresh_token');
-        const response = await axios.post(`${import.meta.env.VITE_API_BASE_URL}/auth/refresh`, { refreshToken });
+        const response = await axios.post(`${import.meta.env.VITE_API_BASE_URL}/api/v1/auth/refresh`, { refreshToken });
         const { accessToken } = response.data;
 
         localStorage.setItem('gatekeeper_access_token', accessToken);

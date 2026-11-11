@@ -11,20 +11,17 @@ interface Props {
 export const RoutePathPatternInput: React.FC<Props> = ({ tenantSlug, value, onChange, error, isLoading }) => {
   const prefix = tenantSlug ? `/${tenantSlug}` : '';
   
-  const getSuffix = () => {
-    if (!tenantSlug) return value.replace(/^\/+/, '');
-    if (value.startsWith(prefix + '/')) {
-      return value.slice(prefix.length + 1);
-    }
-    if (value === prefix) {
-      return '';
+  const getRelativePath = () => {
+    if (!value) return '';
+    if (prefix && value.startsWith(prefix)) {
+      return value.slice(prefix.length).replace(/^\/+/, '');
     }
     return value.replace(/^\/+/, '');
   };
 
-  const handleSuffixChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const rawSuffix = e.target.value.replace(/^\/+/, '');
-    onChange(prefix ? `${prefix}/${rawSuffix}` : `/${rawSuffix}`);
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const rawValue = e.target.value.replace(/^\/+/, '');
+    onChange(rawValue ? `/${rawValue}` : '/');
   };
 
   return (
@@ -42,8 +39,8 @@ export const RoutePathPatternInput: React.FC<Props> = ({ tenantSlug, value, onCh
         )}
         <input
           type="text"
-          value={getSuffix()}
-          onChange={handleSuffixChange}
+          value={getRelativePath()}
+          onChange={handleInputChange}
           placeholder={isLoading ? 'Loading tenant context...' : 'e.g. users/**'}
           disabled={isLoading || !tenantSlug}
           className="w-full px-3 py-2.5 text-sm bg-transparent font-mono text-gray-900 focus:outline-none disabled:opacity-50"
@@ -51,7 +48,7 @@ export const RoutePathPatternInput: React.FC<Props> = ({ tenantSlug, value, onCh
       </div>
       <span className="text-[10px] font-mono text-gray-400 mt-1 block">
         {tenantSlug ? (
-          <>Must start with tenant prefix <code className="text-emerald-600 font-semibold">{prefix}/</code> as enforced by gateway security policy.</>
+          <>Route matches relative path under tenant prefix <code className="text-emerald-600 font-semibold">{prefix}/</code>.</>
         ) : (
           'Loading security path prefix rules...'
         )}

@@ -1,7 +1,7 @@
 package in.gatekeeper.management.dto.responseDto;
 
 import java.time.Instant;
-import java.util.List;
+import java.util.Map;
 
 public record ApiErrorResponse(
         Instant timestamp,
@@ -9,5 +9,5 @@ public record ApiErrorResponse(
         String error,
         String message,
         String path,
-        List<String> details
+        Map<String, String> details
 ) { }

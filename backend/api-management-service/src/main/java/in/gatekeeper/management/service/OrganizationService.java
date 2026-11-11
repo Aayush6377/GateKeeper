@@ -6,12 +6,16 @@ import in.gatekeeper.management.dto.responseDto.OrganizationResponse;
 import in.gatekeeper.management.dto.responseDto.PageResponse;
 import in.gatekeeper.management.dto.responseDto.TenantAdminListResponse;
 import in.gatekeeper.management.dto.responseDto.TenantAdminResponse;
+import in.gatekeeper.management.entity.ApiRoute;
 import in.gatekeeper.management.entity.ManagementUser;
 import in.gatekeeper.management.entity.Organization;
 import in.gatekeeper.management.entity.Role;
 import in.gatekeeper.management.enums.AuditResult;
+import in.gatekeeper.management.enums.ConfigurationChangeType;
 import in.gatekeeper.management.enums.OrganizationStatus;
 import in.gatekeeper.management.enums.RoleName;
+import in.gatekeeper.management.events.GatewayConfigurationEventService;
+import in.gatekeeper.management.repository.ApiRouteRepository;
 import in.gatekeeper.management.repository.ManagementUserRepository;
 import in.gatekeeper.management.repository.OrganizationRepository;
 import in.gatekeeper.management.repository.RoleRepository;
@@ -27,6 +31,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.time.Instant;
+import java.util.List;
 import java.util.UUID;
 
 @Service
@@ -35,10 +40,12 @@ public class OrganizationService {
 
     private final OrganizationRepository organizationRepository;
     private final ManagementUserRepository managementUserRepository;
+    private final ApiRouteRepository apiRouteRepository;
     private final RoleRepository roleRepository;
     private final TenantContext tenantContext;
     private final PasswordEncoder passwordEncoder;
     private final AuditService auditService;
+    private final GatewayConfigurationEventService configurationEventService;
 
     @Transactional
     @Auditable(
@@ -96,8 +103,19 @@ public class OrganizationService {
     public OrganizationResponse update(UUID id, OrganizationRequest request) {
         Organization organization = getOrganization(id);
         checkUnique(request.name(), request.slug(), id);
+
+        boolean slugUpdated = !organization.getSlug().equals(request.slug());
+
         organization.setName(request.name());
         organization.setSlug(request.slug());
+
+        if (slugUpdated){
+            configurationEventService.publish(
+                    ConfigurationChangeType.ORGANIZATION_UPDATED,
+                    organization.getId(),
+                    null
+            );
+        }
 
         return OrganizationResponse.from(organization);
     }
@@ -119,6 +137,16 @@ public class OrganizationService {
 
         organization.setStatus(request.status());
 
+        ConfigurationChangeType configurationChangeType = organization.getStatus() == OrganizationStatus.ACTIVE ?
+                ConfigurationChangeType.ORGANIZATION_ACTIVATED :
+                ConfigurationChangeType.ORGANIZATION_DEACTIVATED;
+
+        configurationEventService.publish(
+                configurationChangeType,
+                organization.getId(),
+                null
+        );
+
         return OrganizationResponse.from(organization);
     }
 
@@ -134,6 +162,12 @@ public class OrganizationService {
         Organization organization = getOrganization(id);
         organization.setStatus(OrganizationStatus.DELETED);
         organization.setDeletedAt(Instant.now());
+
+        configurationEventService.publish(
+                ConfigurationChangeType.ORGANIZATION_DELETED,
+                organization.getId(),
+                null
+        );
     }
 
     @Transactional
@@ -150,6 +184,12 @@ public class OrganizationService {
 
         organization.setStatus(OrganizationStatus.ACTIVE);
         organization.setDeletedAt(null);
+
+        configurationEventService.publish(
+                ConfigurationChangeType.ORGANIZATION_RESTORED,
+                organization.getId(),
+                null
+        );
 
         return OrganizationResponse.from(organization);
     }

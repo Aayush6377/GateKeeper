@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useMemo } from 'react';
+import React, { createContext, useContext, useState, useEffect, useMemo, useCallback } from 'react';
 import axios from 'axios';
 import { jwtDecode } from 'jwt-decode';
 
@@ -30,11 +30,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const decodedPayload = useMemo(() => {
     if (!accessToken) return null;
     try {
-      const decoded = jwtDecode<JwtPayload>(accessToken);
-      if (decoded.exp * 1000 < Date.now()) {
-        return null;
-      }
-      return decoded;
+      return jwtDecode<JwtPayload>(accessToken);
     } catch {
       return null;
     }
@@ -43,27 +39,36 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const role = decodedPayload?.role || null;
   const username = decodedPayload?.sub || null;
   const organizationId = decodedPayload?.organizationId || null;
-  const isAuthenticated = !!accessToken && !!decodedPayload;
 
-  const login = async (credentials: { username: string; password: string }) => {
-    const baseUrl = import.meta.env.VITE_API_BASE_URL;
-    const response = await axios.post(`${baseUrl}/auth/login`, credentials);
-    const data = response.data;
+  const isAuthenticated = !!(accessToken || refreshToken);
 
-    localStorage.setItem('gatekeeper_access_token', data.accessToken);
-    localStorage.setItem('gatekeeper_refresh_token', data.refreshToken);
-    setAccessToken(data.accessToken);
-    setRefreshToken(data.refreshToken);
-
-    return decodedPayload?.role || data.role;
-  };
-
-  const refreshAuthToken = async (): Promise<boolean> => {
+  const logout = useCallback(async () => {
     try {
       const currentRefresh = localStorage.getItem('gatekeeper_refresh_token');
-      if (!currentRefresh) return false;
+      if (currentRefresh) {
+        const baseUrl = `${import.meta.env.VITE_API_BASE_URL}/api/v1`;
+        await axios.post(`${baseUrl}/auth/logout`, { refreshToken: currentRefresh });
+      }
+    } catch (error) {
+      console.error('Logout request failed', error);
+    } finally {
+      localStorage.removeItem('gatekeeper_access_token');
+      localStorage.removeItem('gatekeeper_refresh_token');
+      setAccessToken(null);
+      setRefreshToken(null);
+      window.location.href = '/login';
+    }
+  }, []);
 
-      const baseUrl = import.meta.env.VITE_API_BASE_URL;
+  const refreshAuthToken = useCallback(async (): Promise<boolean> => {
+    try {
+      const currentRefresh = localStorage.getItem('gatekeeper_refresh_token');
+      if (!currentRefresh) {
+        logout();
+        return false;
+      }
+
+      const baseUrl = `${import.meta.env.VITE_API_BASE_URL}/api/v1`;
       const response = await axios.post(`${baseUrl}/auth/refresh`, { refreshToken: currentRefresh });
       const data = response.data;
 
@@ -76,25 +81,39 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       logout();
       return false;
     }
-  };
+  }, [logout]);
 
-  const logout = async () => {
-    try {
-      const currentRefresh = localStorage.getItem('gatekeeper_refresh_token');
-      if (currentRefresh) {
-        const baseUrl = import.meta.env.VITE_API_BASE_URL;
-        await axios.post(`${baseUrl}/auth/logout`, { refreshToken: currentRefresh });
-      }
-      
-    } catch (error) {
-      console.error('Logout request failed', error);
-    } finally {
-      localStorage.removeItem('gatekeeper_access_token');
-      localStorage.removeItem('gatekeeper_refresh_token');
-      setAccessToken(null);
-      setRefreshToken(null);
-      window.location.href = '/login';
+  useEffect(() => {
+    if (!accessToken || !decodedPayload) return;
+
+    const expiresAtMs = decodedPayload.exp * 1000;
+    const nowMs = Date.now();
+    const refreshDelayMs = expiresAtMs - nowMs - 60000;
+
+    if (refreshDelayMs <= 0) {
+      refreshAuthToken();
+      return;
     }
+
+    const timer = setTimeout(() => {
+      refreshAuthToken();
+    }, refreshDelayMs);
+
+    return () => clearTimeout(timer);
+  }, [accessToken, decodedPayload, refreshAuthToken]);
+
+  const login = async (credentials: { username: string; password: string }) => {
+    const baseUrl = `${import.meta.env.VITE_API_BASE_URL}/api/v1`;
+    const response = await axios.post(`${baseUrl}/auth/login`, credentials);
+    const data = response.data;
+
+    localStorage.setItem('gatekeeper_access_token', data.accessToken);
+    localStorage.setItem('gatekeeper_refresh_token', data.refreshToken);
+    setAccessToken(data.accessToken);
+    setRefreshToken(data.refreshToken);
+
+    const decoded = jwtDecode<JwtPayload>(data.accessToken);
+    return decoded.role || data.role;
   };
 
   return (

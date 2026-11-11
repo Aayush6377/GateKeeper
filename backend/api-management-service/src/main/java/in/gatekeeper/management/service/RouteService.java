@@ -1,7 +1,6 @@
 package in.gatekeeper.management.service;
 
 import in.gatekeeper.management.annotations.Auditable;
-import in.gatekeeper.management.dto.projectionDto.GatewayRouteProjection;
 import in.gatekeeper.management.dto.requestDto.PaginationRequest;
 import in.gatekeeper.management.dto.requestDto.RouteRequest;
 import in.gatekeeper.management.dto.requestDto.RouteStatusRequest;
@@ -12,9 +11,11 @@ import in.gatekeeper.management.dto.responseDto.RouteVersionResponse;
 import in.gatekeeper.management.entity.ApiRoute;
 import in.gatekeeper.management.entity.Organization;
 import in.gatekeeper.management.entity.RouteConfigurationVersion;
+import in.gatekeeper.management.enums.ConfigurationChangeType;
 import in.gatekeeper.management.enums.OrganizationStatus;
 import in.gatekeeper.management.enums.RouteChangeType;
 import in.gatekeeper.management.enums.RouteStatus;
+import in.gatekeeper.management.events.GatewayConfigurationEventService;
 import in.gatekeeper.management.repository.ApiRouteRepository;
 import in.gatekeeper.management.repository.RouteConfigurationVersionRepository;
 import in.gatekeeper.management.validation.RouteRequestValidator;
@@ -43,6 +44,7 @@ public class RouteService {
     private final TenantContext tenantContext;
     private final RouteRequestValidator routeRequestValidator;
     private final RouteConfigurationVersionService routeConfigurationVersionService;
+    private final GatewayConfigurationEventService configurationEventService;
 
     @Transactional
     @Auditable(
@@ -53,11 +55,13 @@ public class RouteService {
     )
     public RouteResponse create(RouteRequest request) {
         Organization organization = tenantContext.getOrganization();
-        routeRequestValidator.validate(request, organization);
+        routeRequestValidator.validate(request);
 
         if (apiRouteRepository.existsNonDeletedRouteWithId(organization.getId(), request.routeId())){
             throw new ResponseStatusException(HttpStatus.CONFLICT, "Route ID already exists for this organization");
         }
+
+        routeRequestValidator.validateUniquePathPattern(request.pathPattern(), organization.getId());
 
         ApiRoute route = new ApiRoute();
         RouteRequest.mapToApiRoute(route, request);
@@ -68,6 +72,12 @@ public class RouteService {
         ApiRoute saved = apiRouteRepository.saveAndFlush(route);
 
         routeConfigurationVersionService.saveSnapshot(saved, RouteChangeType.CREATED);
+
+        configurationEventService.publish(
+                ConfigurationChangeType.ROUTE_CREATED,
+                organization.getId(),
+                saved
+        );
 
         return RouteResponse.from(saved);
     }
@@ -111,6 +121,13 @@ public class RouteService {
         route.setConfigurationVersion(route.getConfigurationVersion() + 1);
 
         routeConfigurationVersionService.saveSnapshot(route, RouteChangeType.DELETED);
+
+        configurationEventService.publish(
+                ConfigurationChangeType.ROUTE_DELETED,
+                organizationId,
+                route
+        );
+
     }
 
     @Transactional(readOnly = true)
@@ -143,12 +160,19 @@ public class RouteService {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "RouteId cannot be changed");
         }
 
-        routeRequestValidator.validate(request, organization);
+        routeRequestValidator.validate(request);
+        routeRequestValidator.validateUniquePathPattern(request.pathPattern(), organization.getId(), route.getId());
 
         RouteRequest.mapToApiRoute(route, request);
 
         route.setConfigurationVersion(route.getConfigurationVersion() + 1);
         routeConfigurationVersionService.saveSnapshot(route, RouteChangeType.UPDATED);
+
+        configurationEventService.publish(
+                ConfigurationChangeType.ROUTE_UPDATED,
+                organization.getId(),
+                route
+        );
 
         return RouteResponse.from(route);
     }
@@ -172,19 +196,30 @@ public class RouteService {
             return RouteResponse.from(route);
         }
 
-        RouteChangeType changeType = request.status() == RouteStatus.ACTIVE ? RouteChangeType.ACTIVATED : RouteChangeType.DEACTIVATED;
+        RouteChangeType changeType;
+        ConfigurationChangeType eventChangeType;
+
+        if (request.status() == RouteStatus.ACTIVE){
+            changeType = RouteChangeType.ACTIVATED;
+            eventChangeType = ConfigurationChangeType.ROUTE_ACTIVATED;
+        }
+        else{
+            changeType = RouteChangeType.DEACTIVATED;
+            eventChangeType = ConfigurationChangeType.ROUTE_DEACTIVATED;
+        }
 
         route.setStatus(request.status());
         route.setConfigurationVersion(route.getConfigurationVersion() + 1);
 
         routeConfigurationVersionService.saveSnapshot(route, changeType);
 
-        return RouteResponse.from(route);
-    }
+        configurationEventService.publish(
+                eventChangeType,
+                organizationId,
+                route
+        );
 
-    @Transactional(readOnly = true)
-    public List<GatewayRouteProjection> findAllActiveForGateway() {
-        return apiRouteRepository.findAllByStatusAndOrganization_Status(RouteStatus.ACTIVE, OrganizationStatus.ACTIVE);
+        return RouteResponse.from(route);
     }
 
     @Transactional
@@ -202,6 +237,8 @@ public class RouteService {
         if (apiRouteRepository.existsNonDeletedRouteWithId(organization.getId(), route.getRouteId())){
             throw new ResponseStatusException(HttpStatus.CONFLICT, "Cannot restore route because another route is already using this Route ID");
         }
+
+        routeRequestValidator.validateUniquePathPattern(route.getPathPattern(), organization.getId());
 
         route.setStatus(RouteStatus.INACTIVE);
         route.setConfigurationVersion(route.getConfigurationVersion() + 1);
@@ -247,11 +284,19 @@ public class RouteService {
         UUID organizationId = tenantContext.getOrganizationId();
 
         ApiRoute route = routeConfigurationVersionService.restoreSnapshot(versionId, organizationId);
+        route.setStatus(RouteStatus.ACTIVE);
         route.setConfigurationVersion(route.getConfigurationVersion() + 1);
 
         ApiRoute saved = apiRouteRepository.saveAndFlush(route);
 
         routeConfigurationVersionService.saveSnapshot(saved, RouteChangeType.RESTORED);
+
+        configurationEventService.publish(
+                ConfigurationChangeType.ROUTE_VERSION_RESTORED,
+                organizationId,
+                route
+        );
+
         return RouteResponse.from(saved);
     }
 

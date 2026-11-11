@@ -38,12 +38,21 @@ public record RouteResponse(
             headerRuleResponses.add(RouteHeaderRuleResponse.from(routeHeaderRule));
         }
 
+        String organizationSlug = route.getOrganization() != null ? route.getOrganization().getSlug() : "";
+        String relativePath = route.getPathPattern();
+
+        if (relativePath != null && !relativePath.startsWith("/")) {
+            relativePath = "/" + relativePath;
+        }
+
+        String fullPathPattern = "/" + organizationSlug + relativePath;
+
         return RouteResponse.builder()
                 .id(route.getId())
                 .organizationId(route.getOrganization().getId())
                 .routeId(route.getRouteId())
                 .name(route.getName())
-                .pathPattern(route.getPathPattern())
+                .pathPattern(fullPathPattern)
                 .targetBaseUrl(route.getTargetBaseUrl())
                 .targetPathPrefix(route.getTargetPathPrefix())
                 .requestsPerMinute(route.getRequestsPerMinute())

@@ -4,17 +4,27 @@ import in.gatekeeper.management.dto.requestDto.HeaderRuleRequest;
 import in.gatekeeper.management.dto.requestDto.RouteRequest;
 import in.gatekeeper.management.entity.Organization;
 import in.gatekeeper.management.enums.HeaderAction;
+import in.gatekeeper.management.enums.RouteStatus;
+import in.gatekeeper.management.repository.ApiRouteRepository;
+import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Component;
 import org.springframework.web.server.ResponseStatusException;
+import org.springframework.web.util.pattern.PathPatternParser;
+import org.springframework.web.util.pattern.PatternParseException;
 
 import java.net.URI;
 import java.util.List;
 import java.util.Locale;
 import java.util.Set;
+import java.util.UUID;
 
 @Component
+@RequiredArgsConstructor
 public class RouteRequestValidator {
+
+    private final PathPatternParser pathPatternParser = new PathPatternParser();
+    private final ApiRouteRepository apiRouteRepository;
 
     private static final Set<String> RESTRICTED_HEADERS = Set.of(
             "connection",
@@ -29,9 +39,9 @@ public class RouteRequestValidator {
             "content-length"
     );
 
-    public void validate(RouteRequest request, Organization organization) {
+    public void validate(RouteRequest request) {
 
-        validatePathPattern(request.pathPattern(), organization);
+        validatePathPattern(request.pathPattern());
 
         validateTargetBaseUrl(request.targetBaseUrl());
 
@@ -40,7 +50,32 @@ public class RouteRequestValidator {
         validateHeaderRules(request.headerRules());
     }
 
-    private void validatePathPattern(String pathPattern, Organization organization) {
+    public void validateUniquePathPattern(String pathPattern, UUID organizationId) {
+        boolean exists = apiRouteRepository.existsByOrganizationIdAndPathPatternAndStatusNot(
+                organizationId,
+                pathPattern,
+                RouteStatus.DELETED
+        );
+
+        if (exists) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "A route with this path pattern already exists");
+        }
+    }
+
+    public void validateUniquePathPattern(String pathPattern, UUID organizationId, UUID routeId) {
+        boolean exists = apiRouteRepository.existsByOrganizationIdAndPathPatternAndStatusNotAndIdNot(
+                organizationId,
+                pathPattern,
+                RouteStatus.DELETED,
+                routeId
+        );
+
+        if (exists) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "Another route with this path pattern already exists");
+        }
+    }
+
+    private void validatePathPattern(String pathPattern) {
 
         if (!pathPattern.startsWith("/")
                 || pathPattern.contains("//")
@@ -59,10 +94,10 @@ public class RouteRequestValidator {
             badRequest("Path pattern cannot contain '.' or '..' path segments");
         }
 
-        String tenantPrefix = "/" + organization.getSlug();
-
-        if (!pathPattern.equals(tenantPrefix) && !pathPattern.startsWith(tenantPrefix + "/")) {
-            badRequest("Path pattern must start with tenant prefix " + tenantPrefix);
+        try {
+            pathPatternParser.parse(pathPattern);
+        } catch (PatternParseException e) {
+            badRequest("Invalid path pattern: " + pathPattern);
         }
     }
 

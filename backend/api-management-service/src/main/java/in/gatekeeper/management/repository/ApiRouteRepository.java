@@ -1,12 +1,10 @@
 package in.gatekeeper.management.repository;
 
-import in.gatekeeper.management.dto.projectionDto.GatewayRouteProjection;
 import in.gatekeeper.management.entity.ApiRoute;
 import in.gatekeeper.management.entity.Organization;
 import in.gatekeeper.management.enums.OrganizationStatus;
 import in.gatekeeper.management.enums.RouteStatus;
 import jakarta.persistence.LockModeType;
-import jakarta.validation.constraints.Size;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -69,7 +67,9 @@ public interface ApiRouteRepository extends JpaRepository<ApiRoute, UUID> {
             @Param("organizationId") UUID organizationId
     );
 
-    List<GatewayRouteProjection> findAllByStatusAndOrganization_Status(RouteStatus status, OrganizationStatus organizationStatus);
+    List<ApiRoute> findAllByStatusAndOrganization_Status(RouteStatus status, OrganizationStatus organizationStatus);
+
+    List<ApiRoute> findAllByStatusAndOrganization(RouteStatus routeStatus, Organization organization);
 
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     @Query("""
@@ -94,4 +94,19 @@ public interface ApiRouteRepository extends JpaRepository<ApiRoute, UUID> {
             @Param("cutoff") Instant cutoff,
             Pageable pageable
     );
+
+    boolean existsByOrganizationIdAndPathPatternAndStatusNot(
+            UUID organizationId,
+            String pathPattern,
+            RouteStatus status
+    );
+
+    boolean existsByOrganizationIdAndPathPatternAndStatusNotAndIdNot(
+            UUID organizationId,
+            String pathPattern,
+            RouteStatus status,
+            UUID id
+    );
+
+    List<ApiRoute> findAllByOrganization(Organization organization);
 }

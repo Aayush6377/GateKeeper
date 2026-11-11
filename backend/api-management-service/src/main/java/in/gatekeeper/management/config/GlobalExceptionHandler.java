@@ -13,7 +13,10 @@ import org.springframework.web.server.ResponseStatusException;
 
 import java.nio.file.AccessDeniedException;
 import java.time.Instant;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 @RestControllerAdvice
 public class GlobalExceptionHandler {
@@ -21,11 +24,11 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<ApiErrorResponse> handleValidationException(MethodArgumentNotValidException ex, HttpServletRequest request) {
 
-        List<String> errors = ex.getBindingResult()
-                .getFieldErrors()
-                .stream()
-                .map(error -> error.getField() + ": " + error.getDefaultMessage())
-                .toList();
+        Map<String, String> errors = new HashMap<>();
+
+        ex.getBindingResult().getFieldErrors().forEach(error -> {
+            errors.put(error.getField(), error.getDefaultMessage());
+        });
 
         return buildResponse(
                 HttpStatus.BAD_REQUEST,
@@ -43,7 +46,7 @@ public class GlobalExceptionHandler {
         return buildResponse(
                 status,
                 ex.getReason() != null ? ex.getReason() : status.getReasonPhrase(),
-                List.of(),
+                Map.of(),
                 request
         );
     }
@@ -54,7 +57,7 @@ public class GlobalExceptionHandler {
         return buildResponse(
                 HttpStatus.BAD_REQUEST,
                 "Invalid request body. Check your JSON format and field values.",
-                List.of(),
+                Map.of(),
                 request
         );
     }
@@ -62,10 +65,11 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(ConstraintViolationException.class)
     public ResponseEntity<ApiErrorResponse> handleConstraintViolation(ConstraintViolationException ex, HttpServletRequest request) {
 
-        List<String> errors = ex.getConstraintViolations()
-                .stream()
-                .map(v -> v.getPropertyPath() + ": " + v.getMessage())
-                .toList();
+        Map<String, String> errors = new HashMap<>();
+
+        ex.getConstraintViolations().forEach(v -> {
+            errors.put(v.getPropertyPath().toString(), v.getMessage());
+        });
 
         return buildResponse(
                 HttpStatus.BAD_REQUEST,
@@ -81,7 +85,7 @@ public class GlobalExceptionHandler {
         return buildResponse(
                 HttpStatus.FORBIDDEN,
                 "You do not have permission to perform this action",
-                List.of(),
+                Map.of(),
                 request
         );
     }
@@ -94,7 +98,7 @@ public class GlobalExceptionHandler {
         return buildResponse(
                 HttpStatus.INTERNAL_SERVER_ERROR,
                 "An unexpected error occurred",
-                List.of(),
+                Map.of(),
                 request
         );
     }
@@ -102,7 +106,7 @@ public class GlobalExceptionHandler {
     private ResponseEntity<ApiErrorResponse> buildResponse(
             HttpStatus status,
             String message,
-            List<String> details,
+            Map<String, String> details,
             HttpServletRequest request) {
 
         ApiErrorResponse response = new ApiErrorResponse(
