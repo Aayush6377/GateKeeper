@@ -76,6 +76,15 @@ public class ApiRoute {
     @Enumerated(EnumType.STRING)
     private Set<HttpMethod> allowedMethods = new HashSet<>();
 
+
+    @ElementCollection(fetch = FetchType.LAZY)
+    @CollectionTable(
+            name = "route_allowed_origins",
+            joinColumns = @JoinColumn(name = "route_pk")
+    )
+    @Column(name = "origin", nullable = false)
+    private Set<String> allowedOrigins = new HashSet<>();
+
     @OneToMany(mappedBy = "route", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<RouteHeaderRule> headerRules = new ArrayList<>();
 
@@ -95,6 +104,14 @@ public class ApiRoute {
 
     public void removeAllowedMethod(HttpMethod method){
         allowedMethods.remove(method);
+    }
+
+    public void addAllowedOrigin(String origin){
+        allowedOrigins.add(origin);
+    }
+
+    public void removeAllowedOrigin(String origin){
+        allowedOrigins.remove(origin);
     }
 
     public void setHeaderRules(List<RouteHeaderRule> rules) {

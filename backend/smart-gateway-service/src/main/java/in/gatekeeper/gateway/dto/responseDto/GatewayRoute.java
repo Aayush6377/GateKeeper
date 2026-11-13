@@ -22,6 +22,7 @@ public record GatewayRoute(
         RouteStatus status,
         Long configurationVersion,
         Set<HttpMethod> allowedMethods,
+        Set<String> allowedOrigins,
         List<HeaderRule> headerRules,
         Instant createdAt,
         Instant updatedAt

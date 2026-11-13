@@ -8,6 +8,7 @@ import in.gatekeeper.management.enums.RouteChangeType;
 import in.gatekeeper.management.enums.RouteStatus;
 import in.gatekeeper.management.repository.RouteConfigurationVersionRepository;
 import lombok.RequiredArgsConstructor;
+import org.jspecify.annotations.NonNull;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
@@ -62,16 +63,35 @@ public class RouteConfigurationVersionService {
         }).toList();
 
         route.setName(snapshotResponse.name());
-        route.setPathPattern(snapshotResponse.pathPattern());
+        route.setPathPattern(getPathVariable(snapshotResponse.pathPattern()));
         route.setTargetBaseUrl(snapshotResponse.targetBaseUrl());
         route.setTargetPathPrefix(snapshotResponse.targetPathPrefix());
         route.setRequestsPerMinute(snapshotResponse.requestsPerMinute());
         route.setResponseTimeoutMs(snapshotResponse.responseTimeoutMs());
         route.setIdempotencyEnabled(snapshotResponse.idempotencyEnabled());
         route.setAllowedMethods(snapshotResponse.allowedMethods());
+        route.setAllowedOrigins(snapshotResponse.allowedOrigins());
         route.setHeaderRules(rules);
 
         return route;
+    }
+
+    private static String getPathVariable(String restoredPath) {
+        if (restoredPath != null) {
+            while (restoredPath.startsWith("/")) {
+                restoredPath = restoredPath.substring(1);
+            }
+
+            int firstSlash = restoredPath.indexOf('/');
+            if (firstSlash != -1) {
+                restoredPath = restoredPath.substring(firstSlash);
+            } else {
+                restoredPath = "/";
+            }
+        } else {
+            restoredPath = "/";
+        }
+        return restoredPath;
     }
 
     private String serializeConfiguration(ApiRoute route) {

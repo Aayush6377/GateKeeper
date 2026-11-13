@@ -12,7 +12,6 @@ import in.gatekeeper.management.entity.ApiRoute;
 import in.gatekeeper.management.entity.Organization;
 import in.gatekeeper.management.entity.RouteConfigurationVersion;
 import in.gatekeeper.management.enums.ConfigurationChangeType;
-import in.gatekeeper.management.enums.OrganizationStatus;
 import in.gatekeeper.management.enums.RouteChangeType;
 import in.gatekeeper.management.enums.RouteStatus;
 import in.gatekeeper.management.events.GatewayConfigurationEventService;
@@ -32,7 +31,6 @@ import org.springframework.web.server.ResponseStatusException;
 
 import java.nio.file.AccessDeniedException;
 import java.time.Instant;
-import java.util.List;
 import java.util.UUID;
 
 @Service
@@ -72,12 +70,6 @@ public class RouteService {
         ApiRoute saved = apiRouteRepository.saveAndFlush(route);
 
         routeConfigurationVersionService.saveSnapshot(saved, RouteChangeType.CREATED);
-
-        configurationEventService.publish(
-                ConfigurationChangeType.ROUTE_CREATED,
-                organization.getId(),
-                saved
-        );
 
         return RouteResponse.from(saved);
     }
@@ -135,9 +127,24 @@ public class RouteService {
         Organization organization = tenantContext.getOrganization();
         Pageable pageable = request.toPageable();
 
-        Page<ApiRoute> routes = apiRouteRepository.findDeletedRoutesByOrganizationAndSearch(
+        Page<ApiRoute> routes = apiRouteRepository.findByOrganizationAndStatus(
                 organization,
                 RouteStatus.DELETED,
+                request.search(),
+                pageable
+        );
+
+        return PageResponse.from(routes, RouteResponse::from);
+    }
+
+    @Transactional(readOnly = true)
+    public PageResponse<RouteResponse> getAllActiveRoutes(@Valid PaginationRequest request) {
+        Organization organization = tenantContext.getOrganization();
+        Pageable pageable = request.toPageable();
+
+        Page<ApiRoute> routes = apiRouteRepository.findByOrganizationAndStatus(
+                organization,
+                RouteStatus.ACTIVE,
                 request.search(),
                 pageable
         );

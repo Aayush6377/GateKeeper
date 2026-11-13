@@ -21,6 +21,11 @@ export interface OrganizationStatusRequest {
   status: OrganizationStatus;
 }
 
+export interface OrganizationNameDto {
+  organizationId: string;
+  organizationName: string;
+}
+
 export const organizationService = {
   findAll: async (params: PaginationParams) => {
     const response = await apiClient.get<PageResponse<OrganizationResponse>>('/platform/organizations', {
@@ -69,5 +74,19 @@ export const organizationService = {
     const response = await apiClient.get<OrganizationResponse>('/tenant/organization');
     return response.data;
   },
+
+  getOrganizationNamesBatch: async (organizationIds: string[]): Promise<Record<string, string>> => {
+    if (!organizationIds.length) return {};
+
+    const response = await apiClient.post<OrganizationNameDto[]>(`/platform/organizations/batch-names`, organizationIds);
+
+    const nameMap: Record<string, string> = {};
+
+    response.data.forEach(({ organizationId, organizationName }) => {
+      nameMap[organizationId] = organizationName;
+    })
+    
+    return nameMap;
+  }
   
 };

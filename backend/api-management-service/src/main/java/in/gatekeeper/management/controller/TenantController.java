@@ -1,5 +1,6 @@
 package in.gatekeeper.management.controller;
 
+import in.gatekeeper.management.dto.requestDto.TenantAdminUpdateRequest;
 import in.gatekeeper.management.dto.requestDto.TenantOrganizationRequest;
 import in.gatekeeper.management.dto.responseDto.OrganizationResponse;
 import in.gatekeeper.management.service.OrganizationService;
@@ -24,5 +25,11 @@ public class TenantController {
     public ResponseEntity<OrganizationResponse> updateOwnOrganization(@Valid @RequestBody TenantOrganizationRequest request){
         OrganizationResponse result = organizationService.updateOwnOrganization(request);
         return ResponseEntity.ok(result);
+    }
+
+    @PutMapping("/profile")
+    public ResponseEntity<String> updateOwnPassword(@Valid @RequestBody TenantAdminUpdateRequest request){
+        organizationService.updateOwnProfile(request);
+        return ResponseEntity.ok("Profile updated successfully");
     }
 }

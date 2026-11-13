@@ -41,6 +41,8 @@ public record RouteRequest(
         @NotEmpty
         Set<@NotNull HttpMethod> allowedMethods,
 
+        Set<String> allowedOrigins,
+
         @NotNull
         List<@Valid HeaderRuleRequest> headerRules
 ) {
@@ -53,6 +55,12 @@ public record RouteRequest(
             allowedMethods = Set.of();
         } else {
             allowedMethods = Set.copyOf(allowedMethods);
+        }
+
+        if (allowedOrigins == null) {
+            allowedOrigins = Set.of();
+        } else {
+            allowedOrigins = Set.copyOf(allowedOrigins);
         }
 
         if (headerRules == null) {
@@ -74,15 +82,34 @@ public record RouteRequest(
     }
 
     public static void mapToApiRoute(ApiRoute route, RouteRequest request) {
+        String cleanPath = request.pathPattern().trim();
+
+        if (!cleanPath.startsWith("/")) {
+            cleanPath = "/" + cleanPath;
+        }
+
+        cleanPath = cleanPath.replaceAll("/+", "/");
+
+        if (route.getOrganization() != null && route.getOrganization().getSlug() != null) {
+            String orgSlugPrefix = "/" + route.getOrganization().getSlug();
+            if (cleanPath.startsWith(orgSlugPrefix)) {
+                cleanPath = cleanPath.substring(orgSlugPrefix.length());
+                if (!cleanPath.startsWith("/")) {
+                    cleanPath = "/" + cleanPath;
+                }
+            }
+        }
+
         route.setRouteId(request.routeId());
         route.setName(request.name());
-        route.setPathPattern(request.pathPattern());
+        route.setPathPattern(cleanPath);
         route.setTargetBaseUrl(request.targetBaseUrl());
         route.setTargetPathPrefix(request.targetPathPrefix());
         route.setRequestsPerMinute(request.requestsPerMinute());
         route.setResponseTimeoutMs(request.responseTimeoutMs());
         route.setIdempotencyEnabled(request.idempotencyEnabled());
         route.setAllowedMethods(request.allowedMethods());
+        route.setAllowedOrigins(request.allowedOrigins());
 
         List<RouteHeaderRule> rules =  request.headerRules().stream()
                 .map(RouteRequest::toHeaderRule)

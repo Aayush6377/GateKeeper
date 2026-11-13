@@ -32,6 +32,7 @@ export interface RouteResponse {
   status: RouteStatus;
   configurationVersion: number;
   allowedMethods: HttpMethod[];
+  allowedOrigins: string[];
   headerRules: RouteHeaderRuleResponse[];
   createdAt: string;
   updatedAt: string;
@@ -54,6 +55,7 @@ export interface RouteRequest {
   responseTimeoutMs?: number;
   idempotencyEnabled: boolean;
   allowedMethods: HttpMethod[];
+  allowedOrigins: string[];
   headerRules: HeaderRuleRequest[];
 }
 
@@ -84,6 +86,13 @@ export const routeService = {
 
   findAllDeleted: async (params: PaginationParams) => {
     const response = await apiClient.get<PageResponse<RouteResponse>>('/tenant/routes/deleted', {
+      params,
+    });
+    return response.data;
+  },
+
+  findAllActive: async (params: PaginationParams) => {
+    const response = await apiClient.get<PageResponse<RouteResponse>>('/tenant/routes/active', {
       params,
     });
     return response.data;

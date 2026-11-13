@@ -8,7 +8,8 @@ import {
   Settings, 
   FileText, 
   LogOut, 
-  X 
+  X, 
+  BookOpen
 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { Logo } from '../common/Logo';
@@ -31,6 +32,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ role, isMobileOpen, setMobileO
   const tenantNavItems = [
     { label: 'Tenant Dashboard', path: '/tenant/dashboard', icon: LayoutDashboard },
     { label: 'API Routes & Proxies', path: '/tenant/routes', icon: Network },
+    { label: 'API Docs & Playground', path: '/tenant/playground', icon: BookOpen },
     { label: 'Tenant Settings', path: '/tenant/settings', icon: Settings },
     { label: 'Tenant Audit Logs', path: '/tenant/audit', icon: FileText },
   ];

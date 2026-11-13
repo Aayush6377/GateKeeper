@@ -19,6 +19,10 @@ export const routeFormSchema = z.object({
   responseTimeoutMs: z.number().positive('Must be greater than 0'),
   idempotencyEnabled: z.boolean(),
   allowedMethods: z.array(z.enum(['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS', 'HEAD', 'TRACE'])).min(1, 'Select at least one HTTP method'),
+  allowedOrigins: z.array(z.string()).refine(origins => {
+    if (origins.includes('*') && origins.length > 1) return false;
+    return origins.every(o => o === '*' || /^https?:\/\/.+/.test(o));
+  }, 'Origins must start with http:// or https://, and "*" cannot be combined with other origins.'),
   headerRules: z.array(
     z.object({
       direction: z.enum(['REQUEST', 'RESPONSE']),

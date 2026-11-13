@@ -12,6 +12,7 @@ import { RouteTrafficSection } from '../../components/routes/RouteTrafficSection
 import { RouteMethodsSection } from '../../components/routes/RouteMethodsSection';
 import { RouteHeaderRulesSection } from '../../components/routes/RouteHeaderRulesSection';
 import { Network, ArrowLeft, Save } from 'lucide-react';
+import { RouteOriginsSection } from '../../components/routes/RouteOriginsSection';
 
 export default function RouteFormPage() {
   const { id } = useParams<{ id: string }>();
@@ -34,7 +35,7 @@ export default function RouteFormPage() {
   }, [isEditing, isFetchError, navigate]);
 
   const { register, handleSubmit, control, reset, formState: { errors, isSubmitted } } = useForm<RouteFormValues>({
-    resolver: zodResolver(routeFormSchema),
+    resolver: zodResolver(routeFormSchema) as any,
     defaultValues: {
       routeId: '',
       name: '',
@@ -45,6 +46,7 @@ export default function RouteFormPage() {
       responseTimeoutMs: 5000,
       idempotencyEnabled: false,
       allowedMethods: ['GET', 'POST'],
+      allowedOrigins: ['*'],
       headerRules: [],
     },
   });
@@ -61,6 +63,7 @@ export default function RouteFormPage() {
         responseTimeoutMs: existingRoute.responseTimeoutMs || 5000,
         idempotencyEnabled: existingRoute.idempotencyEnabled,
         allowedMethods: existingRoute.allowedMethods || [],
+        allowedOrigins: existingRoute.allowedOrigins || [],
         headerRules: existingRoute.headerRules.map(rule => ({
           direction: rule.direction,
           action: rule.action,
@@ -129,7 +132,7 @@ export default function RouteFormPage() {
         <div className="flex items-center gap-4">
           <button
             type="button"
-            onClick={() => navigate('/tenant/routes')}
+            onClick={() => navigate(-1)}
             className="p-2 rounded-xl bg-gray-100 hover:bg-gray-200 text-gray-700 transition-colors cursor-pointer"
           >
             <ArrowLeft className="w-4 h-4" />
@@ -172,6 +175,18 @@ export default function RouteFormPage() {
               onChange={field.onChange}
               errors={errors.headerRules}
               isSubmitted={isSubmitted}
+            />
+          )}
+        />
+
+        <Controller
+          name="allowedOrigins"
+          control={control}
+          render={({ field }) => (
+            <RouteOriginsSection
+              allowedOrigins={field.value}
+              onChange={field.onChange}
+              error={errors.allowedOrigins?.message}
             />
           )}
         />

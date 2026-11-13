@@ -57,6 +57,11 @@ public class TenantRouteController {
         return ResponseEntity.ok(routeService.getAllDeletedRoutes(request));
     }
 
+    @GetMapping("/active")
+    public ResponseEntity<PageResponse<RouteResponse>> gelAllActiveRoutes(@Valid @ModelAttribute PaginationRequest request){
+        return ResponseEntity.ok(routeService.getAllActiveRoutes(request));
+    }
+
     @PatchMapping("/{id}/status")
     public ResponseEntity<RouteResponse> changeStatus(@PathVariable UUID id, @Valid @RequestBody RouteStatusRequest request) throws AccessDeniedException {
         return ResponseEntity.ok(routeService.changeStatus(id, request));

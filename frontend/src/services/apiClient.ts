@@ -12,7 +12,6 @@ apiClient.interceptors.request.use((config) => {
   return config;
 });
 
-
 let isRefreshing = false;
 let failedQueue: any[] = [];
 

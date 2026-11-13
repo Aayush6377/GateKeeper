@@ -36,7 +36,7 @@ export const RouteVersionSnapshotModal: React.FC<Props> = ({
                 Version #{version.versionNumber} Snapshot Inspection
               </h3>
               <p className="text-xs text-gray-500 font-mono">
-                Recorded on {new Date(version.createdAt).toLocaleString()} • Change Type: <span className="font-bold text-emerald-600">{version.changeType}</span>
+                Recorded on {new Date(version.createdAt).toLocaleString()} | Change Type: <span className="font-bold text-emerald-600">{version.changeType}</span>
               </p>
             </div>
           </div>
@@ -100,22 +100,39 @@ export const RouteVersionSnapshotModal: React.FC<Props> = ({
             </div>
           </div>
 
-          {/* Allowed Methods */}
-          <div className="bg-gray-50 p-4 rounded-2xl border border-gray-200/60 space-y-2">
-            <span className="text-[10px] text-gray-400 uppercase tracking-wider block font-sans">Allowed HTTP Methods</span>
-            <div className="flex flex-wrap gap-1.5">
-              {snapshot.allowedMethods.map(m => (
-                <span key={m} className="px-2 py-1 bg-white border border-gray-200 text-gray-800 font-bold rounded-lg text-xs">
-                  {m}
-                </span>
-              ))}
+          {/* Allowed Methods & Origins Grid */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="bg-gray-50 p-4 rounded-2xl border border-gray-200/60 space-y-2">
+              <span className="text-[10px] text-gray-400 uppercase tracking-wider block font-sans">Allowed HTTP Methods</span>
+              <div className="flex flex-wrap gap-1.5">
+                {snapshot.allowedMethods?.map(m => (
+                  <span key={m} className="px-2 py-1 bg-white border border-gray-200 text-gray-800 font-bold rounded-lg text-xs">
+                    {m}
+                  </span>
+                ))}
+              </div>
+            </div>
+
+            <div className="bg-gray-50 p-4 rounded-2xl border border-gray-200/60 space-y-2">
+              <span className="text-[10px] text-gray-400 uppercase tracking-wider block font-sans">Allowed CORS Origins</span>
+              <div className="flex flex-wrap gap-1.5">
+                {snapshot.allowedOrigins && snapshot.allowedOrigins.length > 0 && !snapshot.allowedOrigins.includes('*') ? (
+                  snapshot.allowedOrigins.map(origin => (
+                    <span key={origin} className="px-2 py-1 bg-emerald-50 text-emerald-800 border border-emerald-200 font-bold rounded-lg text-xs truncate max-w-full">
+                      {origin}
+                    </span>
+                  ))
+                ) : (
+                  <span className="text-gray-400 italic">No restrictions (*)</span>
+                )}
+              </div>
             </div>
           </div>
 
           {/* Header Rules */}
           <div className="bg-gray-50 p-4 rounded-2xl border border-gray-200/60 space-y-2">
             <span className="text-[10px] text-gray-400 uppercase tracking-wider block font-sans">Header Transformation Rules</span>
-            {snapshot.headerRules.length === 0 ? (
+            {(!snapshot.headerRules || snapshot.headerRules.length === 0) ? (
               <p className="text-gray-400 italic">No header rules in this version snapshot.</p>
             ) : (
               <div className="space-y-2">

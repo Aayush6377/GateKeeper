@@ -12,6 +12,8 @@ import RoutesManagementPage from '../pages/tenant/RoutesManagementPage';
 import RouteFormPage from '../pages/tenant/RouteFormPage';
 import RouteVersionsPage from '../pages/tenant/RouteVersionsPage';
 import TenantSettingsPage from '../pages/tenant/TenantSettingsPage';
+import RoutePlaygroundPage from '../pages/tenant/RoutePlaygroundPage';
+import RouteTestConsolePage from '../pages/tenant/RouteTestConsolePage';
 
 const router = createBrowserRouter([
   {
@@ -35,6 +37,8 @@ const router = createBrowserRouter([
       { path: '/tenant/routes/new', element: <RouteFormPage /> },
       { path: '/tenant/routes/:id/edit', element: <RouteFormPage /> },
       { path: '/tenant/routes/:routeId/versions', element: <RouteVersionsPage /> },
+      { path: '/tenant/playground', element: <RoutePlaygroundPage /> },
+      { path: '/tenant/playground/:routeId/test', element: <RouteTestConsolePage /> },
       { path: '/tenant/settings', element: <TenantSettingsPage /> },
       { path: '/tenant/audit', element: <AuditLogsPage /> },
     ],

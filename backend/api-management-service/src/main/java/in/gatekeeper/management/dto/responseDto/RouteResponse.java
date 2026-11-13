@@ -27,6 +27,7 @@ public record RouteResponse(
         RouteStatus status,
         Long configurationVersion,
         Set<HttpMethod> allowedMethods,
+        Set<String> allowedOrigins,
         List<RouteHeaderRuleResponse> headerRules,
         Instant createdAt,
         Instant updatedAt
@@ -61,6 +62,7 @@ public record RouteResponse(
                 .status(route.getStatus())
                 .configurationVersion(route.getConfigurationVersion())
                 .allowedMethods(route.getAllowedMethods())
+                .allowedOrigins(route.getAllowedOrigins())
                 .headerRules(headerRuleResponses)
                 .createdAt(route.getCreatedAt())
                 .updatedAt(route.getUpdatedAt())

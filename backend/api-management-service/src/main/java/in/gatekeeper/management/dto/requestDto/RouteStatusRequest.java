@@ -5,4 +5,4 @@ import jakarta.validation.constraints.NotNull;
 
 public record RouteStatusRequest(
         @NotNull RouteStatus status
-        ) { }
+) { }

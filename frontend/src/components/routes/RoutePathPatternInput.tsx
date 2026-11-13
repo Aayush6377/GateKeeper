@@ -13,15 +13,17 @@ export const RoutePathPatternInput: React.FC<Props> = ({ tenantSlug, value, onCh
   
   const getRelativePath = () => {
     if (!value) return '';
-    if (prefix && value.startsWith(prefix)) {
-      return value.slice(prefix.length).replace(/^\/+/, '');
+    let clean = value.trim();
+    if (prefix && clean.startsWith(prefix)) {
+      clean = clean.slice(prefix.length);
     }
-    return value.replace(/^\/+/, '');
+    return clean.replace(/^\/+/, '');
   };
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const rawValue = e.target.value.replace(/^\/+/, '');
-    onChange(rawValue ? `/${rawValue}` : '/');
+    const rawValue = e.target.value.trim().replace(/^\/+/, '');
+    const relativePath = rawValue ? `/${rawValue}` : '/';
+    onChange(relativePath);
   };
 
   return (
@@ -41,14 +43,14 @@ export const RoutePathPatternInput: React.FC<Props> = ({ tenantSlug, value, onCh
           type="text"
           value={getRelativePath()}
           onChange={handleInputChange}
-          placeholder={isLoading ? 'Loading tenant context...' : 'e.g. users/**'}
+          placeholder={isLoading ? 'Loading tenant context...' : 'e.g. posts/**'}
           disabled={isLoading || !tenantSlug}
           className="w-full px-3 py-2.5 text-sm bg-transparent font-mono text-gray-900 focus:outline-none disabled:opacity-50"
         />
       </div>
       <span className="text-[10px] font-mono text-gray-400 mt-1 block">
         {tenantSlug ? (
-          <>Route matches relative path under tenant prefix <code className="text-emerald-600 font-semibold">{prefix}/</code>.</>
+          <>Route matches relative path under tenant prefix <code className="text-emerald-600 font-semibold">{prefix}/</code>. (Saved as relative path in DB)</>
         ) : (
           'Loading security path prefix rules...'
         )}

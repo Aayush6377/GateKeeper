@@ -1,10 +1,7 @@
 package in.gatekeeper.management.controller;
 
 import in.gatekeeper.management.dto.requestDto.*;
-import in.gatekeeper.management.dto.responseDto.OrganizationResponse;
-import in.gatekeeper.management.dto.responseDto.PageResponse;
-import in.gatekeeper.management.dto.responseDto.TenantAdminListResponse;
-import in.gatekeeper.management.dto.responseDto.TenantAdminResponse;
+import in.gatekeeper.management.dto.responseDto.*;
 import in.gatekeeper.management.service.OrganizationService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -63,6 +60,11 @@ public class PlatformOrganizationController {
     public ResponseEntity<OrganizationResponse> restore(@PathVariable UUID id){
         OrganizationResponse result = organizationService.restore(id);
         return ResponseEntity.ok(result);
+    }
+
+    @PostMapping("/batch-names")
+    public ResponseEntity<List<OrganizationNameDto>> getOrganizationNamesBatch(@RequestBody List<UUID> organizationIds){
+        return ResponseEntity.ok(organizationService.getOrganizationNamesBatch(organizationIds));
     }
 
     @PostMapping("/{organizationId}/tenant-admin")

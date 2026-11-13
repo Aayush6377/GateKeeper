@@ -40,14 +40,11 @@ public class RouteRequestValidator {
     );
 
     public void validate(RouteRequest request) {
-
         validatePathPattern(request.pathPattern());
-
         validateTargetBaseUrl(request.targetBaseUrl());
-
         validateTargetPathPrefix(request.targetPathPrefix());
-
         validateHeaderRules(request.headerRules());
+        validateAllowedOrigins(request.allowedOrigins());
     }
 
     public void validateUniquePathPattern(String pathPattern, UUID organizationId) {
@@ -179,6 +176,35 @@ public class RouteRequestValidator {
             validateHeaderValue(rule);
 
             validateHeaderAction(rule);
+        }
+    }
+
+    private void validateAllowedOrigins(Set<String> origins) {
+        if (origins == null || origins.isEmpty()) {
+            return;
+        }
+
+        if (origins.contains("*") && origins.size() > 1) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Wildcard '*' cannot be combined with specific origins.");
+        }
+
+        for (String origin : origins) {
+            if (origin.equals("*")) {
+                continue;
+            }
+
+            try {
+                java.net.URI uri = java.net.URI.create(origin);
+                String scheme = uri.getScheme();
+                if (scheme == null || (!scheme.equals("http") && !scheme.equals("https"))) {
+                    throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "CORS origin must start with http:// or https://: " + origin);
+                }
+                if (uri.getHost() == null) {
+                    throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid CORS origin host: " + origin);
+                }
+            } catch (IllegalArgumentException e) {
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid CORS origin URL: " + origin);
+            }
         }
     }
 

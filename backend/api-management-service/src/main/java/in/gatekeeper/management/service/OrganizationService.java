@@ -2,10 +2,7 @@ package in.gatekeeper.management.service;
 
 import in.gatekeeper.management.annotations.Auditable;
 import in.gatekeeper.management.dto.requestDto.*;
-import in.gatekeeper.management.dto.responseDto.OrganizationResponse;
-import in.gatekeeper.management.dto.responseDto.PageResponse;
-import in.gatekeeper.management.dto.responseDto.TenantAdminListResponse;
-import in.gatekeeper.management.dto.responseDto.TenantAdminResponse;
+import in.gatekeeper.management.dto.responseDto.*;
 import in.gatekeeper.management.entity.ApiRoute;
 import in.gatekeeper.management.entity.ManagementUser;
 import in.gatekeeper.management.entity.Organization;
@@ -32,6 +29,7 @@ import org.springframework.web.server.ResponseStatusException;
 
 import java.time.Instant;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 @Service
@@ -40,7 +38,6 @@ public class OrganizationService {
 
     private final OrganizationRepository organizationRepository;
     private final ManagementUserRepository managementUserRepository;
-    private final ApiRouteRepository apiRouteRepository;
     private final RoleRepository roleRepository;
     private final TenantContext tenantContext;
     private final PasswordEncoder passwordEncoder;
@@ -213,6 +210,19 @@ public class OrganizationService {
         return PageResponse.from(organizations, OrganizationResponse::from);
     }
 
+    @Transactional(readOnly = true)
+    public List<OrganizationNameDto> getOrganizationNamesBatch(List<UUID> organizationIds) {
+        if (organizationIds == null || organizationIds.isEmpty()){
+            return List.of();
+        }
+
+        List<Organization> organizations = organizationRepository.findAllById(organizationIds);
+
+        return organizations.stream()
+                .map(OrganizationNameDto::from)
+                .toList();
+    }
+
     @Transactional
     @Auditable(
             action = "CREATE_TENANT_ADMIN",
@@ -334,8 +344,33 @@ public class OrganizationService {
 
     @Transactional
     @Auditable(
-            action = "UPDATE_OWN_ORGANIZATION",
-            resourceType = "ORGANIZATION",
+            action = "UPDATE_OWN_PROFILE",
+            resourceType = "MANAGEMENT_USER",
+            organizationId = "#result.organization.id",
+            resourceId = "#result.id",
+            details = "Tenant updated its name and password"
+    )
+    public TenantAdminResponse updateOwnProfile(TenantAdminUpdateRequest request) {
+        ManagementUser user = tenantContext.getManagementUser();
+        Optional<ManagementUser> existing = managementUserRepository.findByUsername(request.username());
+
+        if (existing.isPresent() && !existing.get().getId().equals(user.getId())){
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "Username already exists");
+        }
+
+        user.setUsername(request.username());
+
+        if (request.password() != null && !request.password().isBlank()) {
+            user.setPasswordHash(passwordEncoder.encode(request.password()));
+        }
+
+        return TenantAdminResponse.from(user);
+    }
+
+    @Transactional
+    @Auditable(
+            action = "UPDATE_MANAGEMENT_USER",
+            resourceType = "MANAGEMENT_USER",
             organizationId = "#result.organization.id",
             resourceId = "#result.id",
             details = "Tenant admin enable status changed"

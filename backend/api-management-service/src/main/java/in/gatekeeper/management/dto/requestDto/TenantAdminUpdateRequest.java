@@ -10,5 +10,4 @@ public record TenantAdminUpdateRequest(
 
         @Size(min = 8, max = 100)
         String password
-) {
-}
+) { }

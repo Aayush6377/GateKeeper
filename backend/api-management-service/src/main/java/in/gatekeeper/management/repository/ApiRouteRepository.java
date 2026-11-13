@@ -43,15 +43,15 @@ public interface ApiRouteRepository extends JpaRepository<ApiRoute, UUID> {
     );
 
     @Query("""
-    SELECT r FROM ApiRoute r WHERE r.organization = :org AND r.status = :deletedStatus AND
+    SELECT r FROM ApiRoute r WHERE r.organization = :org AND r.status = :status AND
     (:search IS NULL OR :search = '' OR
     LOWER(r.routeId) LIKE LOWER(CONCAT('%', :search, '%')) OR
     LOWER(r.name) LIKE LOWER(CONCAT('%', :search, '%')) OR
     LOWER(r.pathPattern) LIKE LOWER(CONCAT('%', :search, '%')))
     """)
-    Page<ApiRoute> findDeletedRoutesByOrganizationAndSearch(
+    Page<ApiRoute> findByOrganizationAndStatus(
             @Param("org") Organization organization,
-            @Param("deletedStatus") RouteStatus deletedStatus,
+            @Param("status") RouteStatus status,
             @Param("search") String search,
             Pageable pageable
     );

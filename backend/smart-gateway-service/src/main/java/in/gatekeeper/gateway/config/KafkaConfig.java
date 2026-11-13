@@ -17,4 +17,14 @@ public class KafkaConfig {
                 .replicas(1)
                 .build();
     }
+
+    @Bean
+    public NewTopic gatewayAccessEventTopic(
+            @Value("${gateway.kafka.access-events-topic}") String topic
+    ){
+        return TopicBuilder.name(topic)
+                .partitions(2)
+                .replicas(1)
+                .build();
+    }
 }
