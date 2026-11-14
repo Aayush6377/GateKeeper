@@ -52,6 +52,7 @@ public class SecurityConfig {
                 authorize -> authorize
                         .requestMatchers(HttpMethod.GET, "/health").permitAll()
                         .requestMatchers("/actuator/**").permitAll()
+                        .requestMatchers("/swagger-ui/**", "/v3/api-docs/**", "/swagger-ui.html").permitAll()
                         .requestMatchers("/api/v1/auth/**").permitAll()
                         .requestMatchers("/api/v1/audit/**").hasAnyRole(RoleName.PLATFORM_ADMIN.name(), RoleName.TENANT_ADMIN.name())
                         .requestMatchers("/api/v1/platform/**").hasRole(RoleName.PLATFORM_ADMIN.name())

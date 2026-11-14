@@ -20,6 +20,7 @@ import PublicLayout from '../components/layout/PublicLayout';
 import AboutDeveloperPage from '../pages/shared/AboutDeveloperPage';
 import ApiDocsPage from '../pages/shared/ApiDocsPage';
 import SystemStatusPage from '../pages/shared/SystemStatusPage';
+import AppWakeWrapper from '../components/common/AppWakeWrapper';
 
 const router = createBrowserRouter([
   {
@@ -66,5 +67,9 @@ const router = createBrowserRouter([
 ]);
 
 export function AppRouter() {
-  return <RouterProvider router={router} />;
+  return (
+    <AppWakeWrapper>
+      <RouterProvider router={router} />
+    </AppWakeWrapper>
+  );
 }

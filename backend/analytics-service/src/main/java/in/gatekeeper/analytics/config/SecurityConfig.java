@@ -48,6 +48,7 @@ public class SecurityConfig {
                 .authorizeHttpRequests(
                 authorize -> authorize
                         .requestMatchers(HttpMethod.GET, "/health").permitAll()
+                        .requestMatchers("/swagger-ui/**", "/v3/api-docs/**", "/swagger-ui.html").permitAll()
                         .requestMatchers("/api/v1/analytics/tenant/**").hasRole("TENANT_ADMIN")
                         .requestMatchers("/api/v1/analytics/platform/**").hasRole("PLATFORM_ADMIN")
                         .requestMatchers("/actuator/**").permitAll()

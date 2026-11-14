@@ -10,6 +10,7 @@ import { loginSchema, type LoginFormData } from '../../schemas/authSchema';
 import { useAuth } from '../../context/AuthContext';
 import { Logo } from '../../components/common/Logo';
 import { GatewayPipelineVisualizer } from '../../components/auth/GatewayPipelineVisualizer';
+import { DemoCredentialsCard } from '../../components/auth/DemoCredentialsCard';
 
 export default function LoginPage() {
   const [showPassword, setShowPassword] = useState(false);
@@ -20,10 +21,17 @@ export default function LoginPage() {
   const {
     register,
     handleSubmit,
+    setValue,
     formState: { errors },
   } = useForm<LoginFormData>({
     resolver: zodResolver(loginSchema),
   });
+
+  const handleQuickDemoFill = (u: string, p: string) => {
+    setValue('username', u, { shouldValidate: true });
+    setValue('password', p, { shouldValidate: true });
+    toast.success(`Loaded credentials for ${u}!`);
+  };
 
   const onSubmit = async (data: LoginFormData) => {
     setIsLoading(true);
@@ -83,7 +91,7 @@ export default function LoginPage() {
         </div>
       </div>
 
-      {/* Right Column: High-End Interactive Login Form */}
+      {/* High-End Interactive Login Form */}
       <div className="col-span-1 lg:col-span-5 flex flex-col justify-between px-6 sm:px-12 lg:px-14 py-8 lg:py-12 bg-gradient-to-b from-gray-50 via-white to-gray-50 relative">
         
         <div className="lg:hidden flex items-center justify-between mb-8 pb-4 border-b border-gray-100">
@@ -185,6 +193,10 @@ export default function LoginPage() {
                 )}
               </button>
             </form>
+
+            {/* Quick Demo Credentials */}
+            <DemoCredentialsCard onSelectDemo={handleQuickDemoFill} />
+
           </motion.div>
         </div>
 
