@@ -3,8 +3,13 @@ import { Link } from 'react-router-dom';
 import { ShieldCheck, Server, Cpu, Database, Layers, Radio, Globe, Leaf } from 'lucide-react';
 import { Logo } from '../common/Logo';
 import { SOCIAL_LINKS } from '../../assets/links';
+import { useAuth } from '../../context/AuthContext';
 
 export const Footer: React.FC = () => {
+  const { isAuthenticated, role } = useAuth();
+
+  const dashboardPath = role === 'PLATFORM_ADMIN' ? '/platform/dashboard' : '/tenant/dashboard';
+
   return (
     <footer className="w-full bg-slate-900 text-slate-300 border-t border-slate-800 pt-16 pb-12 px-6 lg:px-12 mt-auto">
       <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-10 pb-12 border-b border-slate-800/80">
@@ -60,10 +65,10 @@ export const Footer: React.FC = () => {
             Platform
           </h4>
           <ul className="space-y-2.5 text-sm">
-            <li><Link to="/login" className="hover:text-emerald-400 transition-colors">Control Center</Link></li>
-            <li><Link to="/landing" className="hover:text-emerald-400 transition-colors">Landing Page</Link></li>
-            <li><Link to="/features" className="hover:text-emerald-400 transition-colors">Feature Matrix</Link></li>
-            <li><Link to="/gateway/docs" className="hover:text-emerald-400 transition-colors">Gateway Routing</Link></li>
+            <li><Link to={isAuthenticated ? dashboardPath : '/login'} className="hover:text-emerald-400 transition-colors">Control Center</Link></li>
+            <li><a href="/#features" className="hover:text-emerald-400 transition-colors">Capabilities Matrix</a></li>
+            <li><a href="/#pipeline" className="hover:text-emerald-400 transition-colors">Request Pipeline</a></li>
+            <li><a href="/#simulator" className="hover:text-emerald-400 transition-colors">Live Simulator</a></li>
           </ul>
         </div>
 
@@ -76,7 +81,7 @@ export const Footer: React.FC = () => {
             <li><Link to="/architecture" className="hover:text-emerald-400 transition-colors">System Architecture</Link></li>
             <li><Link to="/docs" className="hover:text-emerald-400 transition-colors">API Documentation</Link></li>
             <li><Link to="/about" className="hover:text-emerald-400 transition-colors">About Developer</Link></li>
-            <li><Link to="/security" className="hover:text-emerald-400 transition-colors">Security Specs</Link></li>
+            <li><Link to="/status" className="hover:text-emerald-400 transition-colors">System Status</Link></li>
           </ul>
         </div>
 

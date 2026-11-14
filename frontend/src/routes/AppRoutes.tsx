@@ -14,6 +14,12 @@ import RouteVersionsPage from '../pages/tenant/RouteVersionsPage';
 import TenantSettingsPage from '../pages/tenant/TenantSettingsPage';
 import RoutePlaygroundPage from '../pages/tenant/RoutePlaygroundPage';
 import RouteTestConsolePage from '../pages/tenant/RouteTestConsolePage';
+import LandingPage from '../pages/shared/LandingPage';
+import SystemArchitecturePage from '../pages/shared/SystemArchitecturePage';
+import PublicLayout from '../components/layout/PublicLayout';
+import AboutDeveloperPage from '../pages/shared/AboutDeveloperPage';
+import ApiDocsPage from '../pages/shared/ApiDocsPage';
+import SystemStatusPage from '../pages/shared/SystemStatusPage';
 
 const router = createBrowserRouter([
   {
@@ -41,6 +47,16 @@ const router = createBrowserRouter([
       { path: '/tenant/playground/:routeId/test', element: <RouteTestConsolePage /> },
       { path: '/tenant/settings', element: <TenantSettingsPage /> },
       { path: '/tenant/audit', element: <AuditLogsPage /> },
+    ],
+  },
+  {
+    element: <PublicLayout />,
+    children: [
+      { path: '/', element: <LandingPage /> },
+      { path: '/architecture', element: <SystemArchitecturePage /> },
+      { path: '/about', element: <AboutDeveloperPage /> },
+      { path: '/docs', element: <ApiDocsPage /> },
+      { path: '/status', element: <SystemStatusPage /> },
     ],
   },
   {

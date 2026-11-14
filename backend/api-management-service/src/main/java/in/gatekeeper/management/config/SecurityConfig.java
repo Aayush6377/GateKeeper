@@ -51,7 +51,7 @@ public class SecurityConfig {
                 .authorizeHttpRequests(
                 authorize -> authorize
                         .requestMatchers(HttpMethod.GET, "/health").permitAll()
-                        .requestMatchers("/actuator/**").hasRole(RoleName.PLATFORM_ADMIN.name())
+                        .requestMatchers("/actuator/**").permitAll()
                         .requestMatchers("/api/v1/auth/**").permitAll()
                         .requestMatchers("/api/v1/audit/**").hasAnyRole(RoleName.PLATFORM_ADMIN.name(), RoleName.TENANT_ADMIN.name())
                         .requestMatchers("/api/v1/platform/**").hasRole(RoleName.PLATFORM_ADMIN.name())

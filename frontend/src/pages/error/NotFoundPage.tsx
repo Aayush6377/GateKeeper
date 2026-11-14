@@ -1,4 +1,3 @@
-import React from 'react';
 import { GenericError } from '../../components/common/GenericError';
 
 export default function NotFoundPage() {

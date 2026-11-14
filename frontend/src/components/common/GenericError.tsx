@@ -3,6 +3,7 @@ import { motion } from 'framer-motion';
 import { ShieldAlert, AlertTriangle, ArrowLeft, RefreshCw, Server, Home } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { Logo } from './Logo';
+import { useAuth } from '../../context/AuthContext';
 
 export interface GenericErrorProps {
   statusCode?: string | number;
@@ -27,6 +28,13 @@ export const GenericError: React.FC<GenericErrorProps> = ({
   onRetry,
   technicalDetails,
 }) => {
+  const { isAuthenticated, role } = useAuth();
+
+  let portalUrl = isAuthenticated ? '/tenant/dashboard' : '/login';
+  if (isAuthenticated && role === 'PLATFORM_ADMIN') {
+    portalUrl = '/platform/dashboard';
+  }
+
   const navigate = useNavigate();
 
   const renderIcon = () => {
@@ -112,7 +120,7 @@ export const GenericError: React.FC<GenericErrorProps> = ({
 
           {showHomeButton && (
             <button
-              onClick={() => navigate('/login')}
+              onClick={() => navigate(portalUrl)}
               className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-slate-900 text-white text-sm font-medium hover:bg-slate-800 active:bg-slate-950 shadow-sm transition-all cursor-pointer"
             >
               <Home className="w-4 h-4" /> Portal Overview

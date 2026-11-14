@@ -15,11 +15,14 @@ import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.*;
+import org.springframework.http.client.ClientHttpResponse;
 import org.springframework.http.client.SimpleClientHttpRequestFactory;
 import org.springframework.stereotype.Service;
+import org.springframework.web.client.ResponseErrorHandler;
 import org.springframework.web.client.RestTemplate;
 import tools.jackson.databind.ObjectMapper;
 
+import java.io.IOException;
 import java.time.Instant;
 import java.util.Collections;
 import java.util.Optional;
@@ -182,6 +185,7 @@ public class GatewayService {
             requestFactory.setReadTimeout(timeoutMs);
 
             RestTemplate routeRestTemplate = new RestTemplate(requestFactory);
+            routeRestTemplate.setErrorHandler(response -> false);
 
             // Forwarding request
             ResponseEntity<byte[]> upstreamResponse = routeRestTemplate.exchange(

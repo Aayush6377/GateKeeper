@@ -50,7 +50,7 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.GET, "/health").permitAll()
                         .requestMatchers("/api/v1/analytics/tenant/**").hasRole("TENANT_ADMIN")
                         .requestMatchers("/api/v1/analytics/platform/**").hasRole("PLATFORM_ADMIN")
-                        .requestMatchers("/actuator/**").hasRole("PLATFORM_ADMIN")
+                        .requestMatchers("/actuator/**").permitAll()
                         .anyRequest().authenticated()
                 )
                 .oauth2ResourceServer(oauth ->

@@ -13,7 +13,7 @@ export default function DashboardLayout({ role }: DashboardLayoutProps) {
   const [isMobileOpen, setMobileOpen] = useState(false);
   const { isAuthenticated, role: userRole } = useAuth();
 
-  if (!isAuthenticated) {
+  if (!isAuthenticated || !userRole) {
     return <Navigate to="/login" replace />;
   }
 
