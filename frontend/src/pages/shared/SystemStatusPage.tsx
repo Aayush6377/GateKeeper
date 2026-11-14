@@ -196,7 +196,7 @@ export default function SystemStatusPage() {
           </h3>
 
           <div className="grid grid-cols-1 gap-4">
-            {services.map((service, idx) => {
+            {services.map((service) => {
               const isUp = service.status === 'UP';
               const isLoading = service.status === 'LOADING';
 

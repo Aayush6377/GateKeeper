@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { tenantService } from '../../services/tenantService';
 import { OrganizationProfileCard } from '../../components/settings/OrganizationProfileCard';
 import { AdminCredentialsCard } from '../../components/settings/AdminCredentialsCard';
