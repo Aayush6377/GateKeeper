@@ -1,5 +1,5 @@
 import { Outlet } from 'react-router-dom';
-import { LandingNavbar } from '../landing/LandingNavbar';
+import { LandingNavbar } from './LandingNavbar';
 import { Footer } from './Footer';
 
 export default function PublicLayout() {
